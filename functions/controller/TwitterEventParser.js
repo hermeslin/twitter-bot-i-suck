@@ -26,9 +26,10 @@ module.exports = (request, response) => {
         });
 
         db.collection('direct_message_queue').add({
-          from: userId,
-          send_to: senderId,
-          text: 'you are not allowed.',
+          sender: userId,
+          receiver: senderId,
+          text: 'you are not allowed to use any functions of this bot.',
+          is_send: false,
           created_at
         });
         return;
@@ -39,9 +40,10 @@ module.exports = (request, response) => {
         const subscribersSnap = await db.collection('subscribers').get();
         if (!subscribersSnap.empty && subscribersSnap.size > userLimit) {
           db.collection('direct_message_queue').add({
-            from: userId,
-            send_to: senderId,
+            sender: userId,
+            receiver: senderId,
             text: 'oops, maximum number of users reached.',
+            is_send: false,
             created_at
           });
         } else {
@@ -50,9 +52,10 @@ module.exports = (request, response) => {
           });
 
           db.collection('direct_message_queue').add({
-            from: userId,
-            send_to: senderId,
+            sender: userId,
+            receiver: senderId,
             text: 'subscribe success.',
+            is_send: false,
             created_at
           })
         }
@@ -64,9 +67,10 @@ module.exports = (request, response) => {
         db.collection('subscribers').doc(senderId).delete();
 
         db.collection('direct_message_queue').add({
-          from: userId,
-          send_to: senderId,
+          sender: userId,
+          receiver: senderId,
           text: 'unsubscribe success.',
+          is_send: false,
           created_at
         });
         return;
@@ -76,9 +80,10 @@ module.exports = (request, response) => {
       if (type === 'message_create' && messageData.text === 'users') {
         const subscribersSnap = await db.collection('subscribers').get();
         db.collection('direct_message_queue').add({
-          from: userId,
-          send_to: senderId,
+          sender: userId,
+          receiver: senderId,
           text: `${subscribersSnap.size} user(s) subscribe this bot.`,
+          is_send: false,
           created_at
         });
         return;
