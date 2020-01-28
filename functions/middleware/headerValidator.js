@@ -9,7 +9,7 @@ module.exports = (request, response, next) => {
   }
 
   const body = Buffer.from(request.rawBody).toString();
-  const expectedHash = `sha256=${security(body)}`;
+  const expectedHash = `sha256=${security.hash(body)}`;
   if (signature !== expectedHash) {
     response.status(403).send('Forbidden');
     return;

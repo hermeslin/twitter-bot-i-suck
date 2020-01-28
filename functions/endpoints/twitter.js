@@ -4,6 +4,7 @@ const functions = require('firebase-functions');
 const HeaderVaiidator = require('../middleware/headerValidator');
 const ChallengeResponseCheck = require('../controller/ChallengeResponseCheck');
 const TwitterEventParser = require('../controller/TwitterEventParser');
+const twitter = require('../utils/twitter');
 
 const app = express();
 
