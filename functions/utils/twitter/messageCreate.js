@@ -23,7 +23,7 @@ module.exports.blacklist = async (userId, directMessageEvent) => {
       await db.collection('direct_message_queue').add({
         sender: userId,
         receiver: messageSenderId,
-        text: 'you are not allowed to use any functions of this bot.',
+        text: 'you are not allowed to use any functions.',
         is_send: false,
         created_at
       });
@@ -49,7 +49,7 @@ module.exports.subscribe = async (userId, directMessageEvent) => {
     const message = {
       sender: userId,
       receiver: messageSenderId,
-      text: 'subscribe success.',
+      text: 'successfully subscribed.',
       is_send: false,
       created_at
     };
@@ -83,7 +83,7 @@ module.exports.unsubscribe = async (userId, directMessageEvent) => {
     await db.collection('direct_message_queue').add({
       sender: userId,
       receiver: messageSenderId,
-      text: 'unsubscribe success.',
+      text: 'successfully unsubscribed.',
       is_send: false,
       created_at
     });
@@ -108,7 +108,7 @@ module.exports.users = async (userId, directMessageEvent) => {
     await db.collection('direct_message_queue').add({
       sender: userId,
       receiver: messageSenderId,
-      text: `${subscribersSnap.size} user(s) subscribe this bot.`,
+      text: `${subscribersSnap.size} user(s) subscribed this bot.`,
       is_send: false,
       created_at
     });
