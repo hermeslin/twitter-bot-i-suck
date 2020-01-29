@@ -3,7 +3,7 @@ const admin = require('../../utils/admin');
 
 const db = admin.firestore();
 
-module.exports.blacklist = async (userId, directMessageEvent) => {
+module.exports.blacklist = async (userId, directMessageEvent, users) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -34,7 +34,7 @@ module.exports.blacklist = async (userId, directMessageEvent) => {
   }
 };
 
-module.exports.subscribe = async (userId, directMessageEvent) => {
+module.exports.subscribe = async (userId, directMessageEvent, users) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -58,6 +58,7 @@ module.exports.subscribe = async (userId, directMessageEvent) => {
       message.text = 'oops, maximum number of users reached.';
     } else {
       await db.collection('subscribers').doc(messageSenderId).set({
+        info: users[messageSenderId],
         created_at
       });
     }
@@ -69,7 +70,7 @@ module.exports.subscribe = async (userId, directMessageEvent) => {
   }
 };
 
-module.exports.unsubscribe = async (userId, directMessageEvent) => {
+module.exports.unsubscribe = async (userId, directMessageEvent, users) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -94,7 +95,7 @@ module.exports.unsubscribe = async (userId, directMessageEvent) => {
   }
 };
 
-module.exports.users = async (userId, directMessageEvent) => {
+module.exports.users = async (userId, directMessageEvent, users) => {
   const {
     created_timestamp: created_at,
     message_create: {
