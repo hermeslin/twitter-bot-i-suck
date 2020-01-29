@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
-const admin = require('../utils/admin');
-const twitter = require('../utils/twitter');
+const admin = require('../../utils/admin');
+const twitter = require('../../utils/twitter');
 
 const db = admin.firestore();
 
