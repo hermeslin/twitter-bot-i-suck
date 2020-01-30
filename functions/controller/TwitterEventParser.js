@@ -24,8 +24,9 @@ module.exports = async (request, response) => {
       directMessageResults.push(messageCreate.blacklist(userId, directMessageEvent, users));
 
       // subscribe
-      if (type === 'message_create' && messageData.text === 'subscribe') {
-        directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users));
+      const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/);
+      if (type === 'message_create' && subscribeStrMatch) {
+        directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch));
       }
 
       // unsubscribe

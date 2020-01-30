@@ -34,7 +34,7 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
   }
 };
 
-module.exports.subscribe = async (userId, directMessageEvent, users) => {
+module.exports.subscribe = async (userId, directMessageEvent, users, subscribeStrMatch) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -54,11 +54,12 @@ module.exports.subscribe = async (userId, directMessageEvent, users) => {
       created_at
     };
 
-    if (!subscribersSnap.empty && subscribersSnap.size > userLimit) {
+    if (!subscribersSnap.empty && subscribersSnap.size >= userLimit) {
       message.text = 'oops, maximum number of users reached.';
     } else {
       await db.collection('subscribers').doc(messageSenderId).set({
         info: users[messageSenderId],
+        customText: (subscribeStrMatch[1]) ? subscribeStrMatch[1] : null,
         created_at
       });
     }
