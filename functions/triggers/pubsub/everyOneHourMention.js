@@ -36,10 +36,8 @@ module.exports = functions.pubsub.topic('every-one-hour-mention').onPublish(asyn
   if (notMentionedList.length > 0) {
     const randomIndex = Math.floor(Math.random() * notMentionedList.length);
     const notMentioned = notMentionedList[randomIndex];
-
     db.doc(`mention_queue/${today}/users/${notMentioned.subscriber.id}`).set({
-      text: (subscriber.data.customText) ? subscriber.data.customText : config.mentionText,
-      data: notMentioned.subscriber.data,
+      text: (notMentioned.subscriber.data.customText) ? notMentioned.subscriber.data.customText : config.mentionText,
       is_send: false,
       create_at: new Date().getTime(),
     });

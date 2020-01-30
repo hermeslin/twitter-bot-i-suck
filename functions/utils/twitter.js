@@ -1,3 +1,4 @@
+const querystring = require('querystring');
 const axios = require('axios');
 const crypto = require('crypto');
 const twitter = require('../config/twitter');
@@ -18,7 +19,7 @@ const authorizationHeader = (method, url, query = {}, postData = {}) => {
 
   const parameterString = Object.keys(parameters).sort().map((currentKey) => {
     const value = parameters[currentKey];
-    return `${encodeURIComponent(currentKey)}=${value}`;
+    return `${encodeURIComponent(currentKey)}=${encodeURIComponent(value)}`;
   }).join('&');
 
   const oauthSignatureString = [method, url, parameterString].map((element) => (
@@ -57,4 +58,18 @@ module.exports.sendDm = (receiver, text) => {
   }
 
   return axios.post(url, directMessage, { headers });
+};
+
+module.exports.sendMention = (screenName, text) => {
+  const method = 'POST';
+  const url = 'https://api.twitter.com/1.1/statuses/update.json';
+  const query = {
+    status: `@${screenName} ${text}`
+  };
+
+  const headers = {
+    'Authorization': `OAuth ${authorizationHeader(method, url, query)}`,
+  }
+
+  return axios.post(`${url}?${querystring.encode(query)}`, null, { headers });
 };
