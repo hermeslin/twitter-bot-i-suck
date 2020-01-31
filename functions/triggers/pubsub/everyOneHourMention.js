@@ -1,11 +1,12 @@
-const moment = require('moment');
+// const moment = require('moment');
+const moment = require('moment-timezone');
 const functions = require('firebase-functions');
 const admin = require('../../utils/admin');
 const config = require('../../config/app');
 
 module.exports = functions.pubsub.topic('every-one-hour-mention').onPublish(async (message) => {
   const db = admin.firestore();
-  const today = moment().format('YYYYMMDD');
+  const today = moment().tz(config.timezone).format('YYYYMMDD');
   const subscribersSnap = await db.collection('subscribers').get();
 
   const filterResult = [];
