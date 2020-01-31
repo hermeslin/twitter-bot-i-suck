@@ -111,7 +111,7 @@ module.exports.users = async (userId, directMessageEvent, users) => {
     await db.collection('direct_message_queue').add({
       sender: userId,
       receiver: messageSenderId,
-      text: dmString.users.replace(':userCount', subscribersSnap.size),
+      text: dmString.users.replace(':user_count', subscribersSnap.size),
       is_send: false,
       created_at
     });

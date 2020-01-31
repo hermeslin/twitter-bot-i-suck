@@ -1,4 +1,3 @@
-// const moment = require('moment');
 const moment = require('moment-timezone');
 const functions = require('firebase-functions');
 const admin = require('../../utils/admin');

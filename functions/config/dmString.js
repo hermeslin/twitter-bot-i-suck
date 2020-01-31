@@ -13,4 +13,5 @@ module.exports = {
   },
   users: process.env.DM_USERS,
   unknownCommand: process.env.DM_UNKNOWN_COMMAND,
+  mentionFail: process.env.DM_MENTION_FAIL,
 };

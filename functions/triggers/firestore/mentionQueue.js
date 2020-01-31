@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('../../utils/admin');
 const twitter = require('../../utils/twitter');
+const dmString = require('../../config/dmString');
 
 const db = admin.firestore();
 
@@ -34,6 +35,10 @@ module.exports = functions.firestore.document('/mention_queue/{mentionDate}/user
       data: error.response.data,
     };
     db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
+
+    const dmText = dmString.mentionFail.replace(':mention_text', newMention.text);
+    twitter.sendDm(receiverId, dmText);
+
     return Promise.reject(error);
   }
 });
