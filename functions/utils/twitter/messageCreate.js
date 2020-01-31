@@ -1,3 +1,4 @@
+const dmString = require('../../config/dmString');
 const config = require('../../config/app');
 const admin = require('../../utils/admin');
 
@@ -23,7 +24,7 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
       await db.collection('direct_message_queue').add({
         sender: userId,
         receiver: messageSenderId,
-        text: 'you are not allowed to use any functions.',
+        text: dmString.blockUser,
         is_send: false,
         created_at
       });
@@ -49,13 +50,13 @@ module.exports.subscribe = async (userId, directMessageEvent, users, subscribeSt
     const message = {
       sender: userId,
       receiver: messageSenderId,
-      text: 'successfully subscribed.',
+      text: dmString.subscribe.success,
       is_send: false,
       created_at
     };
 
     if (!subscribersSnap.empty && subscribersSnap.size >= userLimit) {
-      message.text = 'oops, maximum number of users reached.';
+      message.text = dmString.subscribe.maximum;
     } else {
       await db.collection('subscribers').doc(messageSenderId).set({
         info: users[messageSenderId],
@@ -85,7 +86,7 @@ module.exports.unsubscribe = async (userId, directMessageEvent, users) => {
     await db.collection('direct_message_queue').add({
       sender: userId,
       receiver: messageSenderId,
-      text: 'successfully unsubscribed.',
+      text: dmString.unsubscribe.success,
       is_send: false,
       created_at
     });
@@ -110,7 +111,31 @@ module.exports.users = async (userId, directMessageEvent, users) => {
     await db.collection('direct_message_queue').add({
       sender: userId,
       receiver: messageSenderId,
-      text: `${subscribersSnap.size} user(s) subscribed this bot.`,
+      text: dmString.users.replace(':userCount', subscribersSnap.size),
+      is_send: false,
+      created_at
+    });
+    return Promise.resolve('done');
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
+module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
+  const {
+    created_timestamp: created_at,
+    message_create: {
+      sender_id: messageSenderId,
+    }
+  } = directMessageEvent;
+
+  try {
+    const subscribersSnap = await db.collection('subscribers').get();
+
+    await db.collection('direct_message_queue').add({
+      sender: userId,
+      receiver: messageSenderId,
+      text: dmString.unknownCommand,
       is_send: false,
       created_at
     });

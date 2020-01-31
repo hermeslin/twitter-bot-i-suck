@@ -2,16 +2,16 @@ const messageCreate = require('../utils/twitter/messageCreate');
 
 module.exports = async (request, response) => {
   // dm evnt
-  // const userId = request.body.for_user_id;
   const {
     for_user_id: userId,
     direct_message_events: directMessageEvents,
-    users,
   } = request.body;
 
   const directMessageResults = [];
 
   if (directMessageEvents) {
+    const users = request.body.users;
+
     for (const directMessageEvent of directMessageEvents) {
       const {
         type,
@@ -23,19 +23,25 @@ module.exports = async (request, response) => {
       // check user
       directMessageResults.push(messageCreate.blacklist(userId, directMessageEvent, users));
 
-      // subscribe
-      const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/);
-      if (type === 'message_create' && subscribeStrMatch) {
-        directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch));
-      }
-
-      // unsubscribe
-      if (type === 'message_create' && messageData.text === 'unsubscribe') {
-        directMessageResults.push(messageCreate.unsubscribe(userId, directMessageEvent, users));
-      }
-
-      if (type === 'message_create' && messageData.text === 'users') {
-        directMessageResults.push(messageCreate.users(userId, directMessageEvent, users));
+      if (type === 'message_create') {
+        // subscribe or subscribe with custom string
+        const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/);
+        if (subscribeStrMatch) {
+          directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch));
+        } else {
+          // not subscribe string
+          switch (messageData.text) {
+            case 'unsubscribe':
+              directMessageResults.push(messageCreate.unsubscribe(userId, directMessageEvent, users));
+              break;
+            case 'users':
+              directMessageResults.push(messageCreate.users(userId, directMessageEvent, users));
+              break;
+            default:
+              directMessageResults.push(messageCreate.unknownCommand(userId, directMessageEvent, users));
+              break;
+          }
+        }
       }
     }
 

@@ -10,11 +10,12 @@ module.exports = functions.firestore.document('/mention_queue/{mentionDate}/user
   const receiverId = context.params.receiverId;
   const newMention = snapshot.data();
 
+  const result = {
+    update_at: new Date().getTime(),
+  };
+
   try {
     const subscriberSnap = await db.doc(`/subscribers/${receiverId}`).get();
-    const result = {
-      update_at: new Date().getTime(),
-    };
 
     if (subscriberSnap.exists) {
       const subscriber = subscriberSnap.data();
@@ -26,6 +27,13 @@ module.exports = functions.firestore.document('/mention_queue/{mentionDate}/user
     }
     return db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
   } catch (error) {
+    result.error = {
+      status: error.response.status,
+      statusText: error.response.statusText,
+      headers: error.response.headers,
+      data: error.response.data,
+    };
+    db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
     return Promise.reject(error);
   }
 });
