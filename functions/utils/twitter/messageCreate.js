@@ -130,7 +130,10 @@ module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
   } = directMessageEvent;
 
   try {
-    const subscribersSnap = await db.collection('subscribers').get();
+
+    if (userId === messageSenderId) {
+      return Promise.resolve('done');
+    }
 
     await db.collection('direct_message_queue').add({
       sender: userId,
