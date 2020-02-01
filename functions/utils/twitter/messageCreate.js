@@ -16,9 +16,12 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
 
   // block user
   try {
+    let isBlockUser = false;
+
     if (userBlacklist.split(',').includes(messageSenderId)) {
       await db.collection('blacklist').doc(messageSenderId).set({
-        created_at
+        created_at,
+        info: users[messageSenderId]
       });
 
       await db.collection('direct_message_queue').add({
@@ -29,9 +32,10 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
         created_at
       });
 
-      throw new Error('not allowed user');
+      isBlockUser = true;
     }
-    return Promise.resolve('done');
+
+    return Promise.resolve({ isBlockUser });
   } catch (error) {
     return Promise.reject(error);
   }

@@ -1,5 +1,44 @@
 const messageCreate = require('../utils/twitter/messageCreate');
 
+const directMessageHandler = async (userId, directMessageEvent, users) => {
+  const {
+    type,
+    message_create: {
+      message_data: messageData
+    }
+  } = directMessageEvent;
+
+  try {
+    // check user is in blacklist or not
+    const { isBlockUser } = await messageCreate.blacklist(userId, directMessageEvent, users);
+
+    if (type === 'message_create' && !isBlockUser) {
+      // subscribe or subscribe with custom string
+      const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/i);
+      if (subscribeStrMatch) {
+        await messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch);
+      } else {
+        // not subscribe string
+        switch (messageData.text.toLowerCase()) {
+          case 'unsubscribe':
+            await messageCreate.unsubscribe(userId, directMessageEvent, users);
+            break;
+          case 'users':
+          case 'user':
+            await messageCreate.users(userId, directMessageEvent, users);
+            break;
+          default:
+            await messageCreate.unknownCommand(userId, directMessageEvent, users);
+            break;
+        }
+      }
+    }
+    return Promise.resolve(directMessageEvent);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+};
+
 module.exports = async (request, response) => {
   // dm evnt
   const {
@@ -7,46 +46,20 @@ module.exports = async (request, response) => {
     direct_message_events: directMessageEvents,
   } = request.body;
 
-  const directMessageResults = [];
-
   if (directMessageEvents) {
     const users = request.body.users;
+    const directMessageResults = [];
 
+    // process directMessageEvents in parallel
     for (const directMessageEvent of directMessageEvents) {
-      const {
-        type,
-        message_create: {
-          message_data: messageData
-        }
-      } = directMessageEvent;
-
-      // check user
-      directMessageResults.push(messageCreate.blacklist(userId, directMessageEvent, users));
-
-      if (type === 'message_create') {
-        // subscribe or subscribe with custom string
-        const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/i);
-        if (subscribeStrMatch) {
-          directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch));
-        } else {
-          // not subscribe string
-          switch (messageData.text.toLowerCase()) {
-            case 'unsubscribe':
-              directMessageResults.push(messageCreate.unsubscribe(userId, directMessageEvent, users));
-              break;
-            case 'users':
-            case 'user':
-              directMessageResults.push(messageCreate.users(userId, directMessageEvent, users));
-              break;
-            default:
-              directMessageResults.push(messageCreate.unknownCommand(userId, directMessageEvent, users));
-              break;
-          }
-        }
-      }
+      directMessageResults.push(directMessageHandler(userId, directMessageEvent, users));
     }
 
-    await Promise.all(directMessageResults);
+    try {
+      await Promise.all(directMessageResults);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   response.status(200).send('done');
