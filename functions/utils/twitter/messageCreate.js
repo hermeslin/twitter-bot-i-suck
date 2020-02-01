@@ -28,6 +28,8 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
         is_send: false,
         created_at
       });
+
+      throw new Error('not allowed user');
     }
     return Promise.resolve('done');
   } catch (error) {
