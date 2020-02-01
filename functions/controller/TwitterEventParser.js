@@ -25,16 +25,17 @@ module.exports = async (request, response) => {
 
       if (type === 'message_create') {
         // subscribe or subscribe with custom string
-        const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/);
+        const subscribeStrMatch = messageData.text.match(/^(?:subscribe|subscribe:(.+))$/i);
         if (subscribeStrMatch) {
           directMessageResults.push(messageCreate.subscribe(userId, directMessageEvent, users, subscribeStrMatch));
         } else {
           // not subscribe string
-          switch (messageData.text) {
+          switch (messageData.text.toLowerCase()) {
             case 'unsubscribe':
               directMessageResults.push(messageCreate.unsubscribe(userId, directMessageEvent, users));
               break;
             case 'users':
+            case 'user':
               directMessageResults.push(messageCreate.users(userId, directMessageEvent, users));
               break;
             default:
