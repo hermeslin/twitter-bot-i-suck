@@ -1,6 +1,7 @@
 const dmString = require('../../config/dmString');
 const config = require('../../config/app');
 const admin = require('../../utils/admin');
+const twitter = require('../../utils/twitter');
 
 const db = admin.firestore();
 
@@ -148,6 +149,51 @@ module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
       is_send: false,
       created_at
     });
+    return Promise.resolve('done');
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+module.exports.lookup = async (userId, directMessageEvent, users, screenName) => {
+  const {
+    created_timestamp: created_at,
+    message_create: {
+      sender_id: messageSenderId,
+    }
+  } = directMessageEvent;
+
+  try {
+    if (screenName) {
+      const response = await twitter.lookup({ screen_name: screenName });
+      const user = await response.data[0];
+      const {
+        name,
+        screen_name,
+        protected,
+        followers_count,
+        friends_count,
+        listed_count,
+        favourites_count,
+        statuses_count,
+      } = user;
+
+      await db.collection('direct_message_queue').add({
+        sender: userId,
+        receiver: messageSenderId,
+        text: dmString.lookup.replace(':name', name)
+          .replace(':screen_name', screen_name)
+          .replace(':protected', protected)
+          .replace(':followers_count', followers_count)
+          .replace(':friends_count', friends_count)
+          .replace(':listed_count', listed_count)
+          .replace(':favourites_count', favourites_count)
+          .replace(':statuses_count', statuses_count)
+        ,
+        is_send: false,
+        created_at
+      });
+    }
     return Promise.resolve('done');
   } catch (error) {
     return Promise.reject(error);

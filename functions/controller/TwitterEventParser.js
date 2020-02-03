@@ -12,13 +12,19 @@ const directMessageHandler = async (userId, directMessageEvent, users) => {
     // check user is in blacklist or not
     const { isBlockUser } = await messageCreate.blacklist(userId, directMessageEvent, users);
 
-    if (type === 'message_create' || !isBlockUser) {
+    if (type === 'message_create' && !isBlockUser && messageData.text) {
       // filter direct message string
       const [, command, payload] = messageData.text.match(/^(\w+)(?::(.+))?$/);
       switch (command.toLowerCase()) {
+        // command with paylaod
+        // exp: subscribe:mention_text
         case 'subscribe':
           await messageCreate.subscribe(userId, directMessageEvent, users, payload);
           break;
+        case 'lookup':
+          await messageCreate.lookup(userId, directMessageEvent, users, payload);
+          break;
+        // command without paylaod
         case 'unsubscribe':
           await messageCreate.unsubscribe(userId, directMessageEvent, users);
           break;

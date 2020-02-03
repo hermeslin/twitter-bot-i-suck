@@ -73,3 +73,15 @@ module.exports.sendMention = (screenName, text) => {
 
   return axios.post(`${url}?${querystring.encode(query)}`, null, { headers });
 };
+
+module.exports.lookup = (parameters, payload) => {
+  const method = 'GET';
+  const url = 'https://api.twitter.com/1.1/users/lookup.json';
+  const query = parameters;
+
+  const headers = {
+    'Authorization': `OAuth ${authorizationHeader(method, url, query)}`,
+  }
+
+  return axios.get(`${url}?${querystring.encode(query)}`, { headers });
+};
