@@ -41,7 +41,7 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
   }
 };
 
-module.exports.subscribe = async (userId, directMessageEvent, users, subscribeStrMatch) => {
+module.exports.subscribe = async (userId, directMessageEvent, users, customText) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -66,7 +66,7 @@ module.exports.subscribe = async (userId, directMessageEvent, users, subscribeSt
     } else {
       await db.collection('subscribers').doc(messageSenderId).set({
         info: users[messageSenderId],
-        customText: (subscribeStrMatch[1]) ? subscribeStrMatch[1] : null,
+        customText: (customText) ? customText : null,
         created_at
       });
     }
