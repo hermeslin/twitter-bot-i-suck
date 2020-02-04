@@ -5,7 +5,7 @@ const twitter = require('../../utils/twitter');
 
 const db = admin.firestore();
 
-module.exports.blacklist = async (userId, directMessageEvent, users) => {
+module.exports.blacklist = async ({ userId, directMessageEvent, users }) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -42,7 +42,7 @@ module.exports.blacklist = async (userId, directMessageEvent, users) => {
   }
 };
 
-module.exports.subscribe = async (userId, directMessageEvent, users, customText) => {
+module.exports.subscribe = async ({ userId, directMessageEvent, users, payload: customText }) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -79,7 +79,7 @@ module.exports.subscribe = async (userId, directMessageEvent, users, customText)
   }
 };
 
-module.exports.unsubscribe = async (userId, directMessageEvent, users) => {
+module.exports.unsubscribe = async ({ userId, directMessageEvent }) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -104,7 +104,7 @@ module.exports.unsubscribe = async (userId, directMessageEvent, users) => {
   }
 };
 
-module.exports.users = async (userId, directMessageEvent, users) => {
+module.exports.users = async ({ userId, directMessageEvent }) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -128,7 +128,7 @@ module.exports.users = async (userId, directMessageEvent, users) => {
   }
 };
 
-module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
+module.exports.unknownCommand = async ({ userId, directMessageEvent }) => {
   const {
     created_timestamp: created_at,
     message_create: {
@@ -137,10 +137,6 @@ module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
   } = directMessageEvent;
 
   try {
-
-    if (userId === messageSenderId) {
-      return Promise.resolve('done');
-    }
 
     await db.collection('direct_message_queue').add({
       sender: userId,
@@ -155,7 +151,7 @@ module.exports.unknownCommand = async (userId, directMessageEvent, users) => {
   }
 }
 
-module.exports.lookup = async (userId, directMessageEvent, users, screenName) => {
+module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName }) => {
   const {
     created_timestamp: created_at,
     message_create: {
