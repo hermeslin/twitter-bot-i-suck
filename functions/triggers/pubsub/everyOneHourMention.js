@@ -11,18 +11,14 @@ module.exports = functions.pubsub.topic('every-one-hour-mention').onPublish(asyn
   const filterResult = [];
   subscribersSnap.forEach((subscriber) => {
     const notMentionedUsers = async (subscriber) => {
-      try {
-        const notMentionedUsersSnap = await db.doc(`mention_queue/${today}/users/${subscriber.id}`).get();
-        return Promise.resolve({
-          exists: notMentionedUsersSnap.exists,
-          subscriber: {
-            id: subscriber.id,
-            data: subscriber.data()
-          },
-        });
-      } catch (error) {
-        return Promise.reject(error);
-      }
+      const notMentionedUsersSnap = await db.doc(`mention_queue/${today}/users/${subscriber.id}`).get();
+      return {
+        exists: notMentionedUsersSnap.exists,
+        subscriber: {
+          id: subscriber.id,
+          data: subscriber.data()
+        },
+      };
     };
     filterResult.push(notMentionedUsers(subscriber));
   });

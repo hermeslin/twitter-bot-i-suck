@@ -76,7 +76,12 @@ module.exports.sendDm = (receiver, text) => {
     'Authorization': `OAuth ${authorizationHeader(method, url)}`,
   }
 
-  return axios.post(url, directMessage, { headers });
+  return axiosHandler({
+    method,
+    url,
+    data: directMessage,
+    headers,
+  });
 };
 
 module.exports.sendMention = (screenName, text) => {
@@ -90,7 +95,12 @@ module.exports.sendMention = (screenName, text) => {
     'Authorization': `OAuth ${authorizationHeader(method, url, query)}`,
   }
 
-  return axios.post(`${url}?${querystring.encode(query)}`, null, { headers });
+  return axiosHandler({
+    method,
+    url: `${url}?${querystring.encode(query)}`,
+    data: null,
+    headers,
+  });
 };
 
 module.exports.lookup = (parameters) => {

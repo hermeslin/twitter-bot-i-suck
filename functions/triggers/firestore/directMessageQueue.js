@@ -9,16 +9,12 @@ module.exports = functions.firestore.document('/direct_message_queue/{queueId}')
   const queueId = context.params.queueId;
   const newMessage = snapshot.data();
 
-  try {
-    const { status, statusText, data } = await twitter.sendDm(newMessage.receiver, newMessage.text);
-    return db.doc(`/direct_message_queue/${queueId}`).update({
-      update_at: new Date().getTime(),
-      is_send: true,
-      response: {
-        status, statusText, data
-      }
-    });
-  } catch (error) {
-    return Promise.reject(error);
-  }
+  const { status, statusText, data } = await twitter.sendDm(newMessage.receiver, newMessage.text);
+  return db.doc(`/direct_message_queue/${queueId}`).update({
+    update_at: new Date().getTime(),
+    is_send: true,
+    response: {
+      status, statusText, data
+    }
+  });
 });

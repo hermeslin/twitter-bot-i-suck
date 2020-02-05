@@ -16,30 +16,26 @@ module.exports.blacklist = async ({ userId, directMessageEvent, users }) => {
   const { userBlacklist } = config;
 
   // block user
-  try {
-    let isBlockUser = false;
+  let isBlockUser = false;
 
-    if (userBlacklist.split(',').includes(messageSenderId)) {
-      await db.collection('blacklist').doc(messageSenderId).set({
-        created_at,
-        info: users[messageSenderId]
-      });
+  if (userBlacklist.split(',').includes(messageSenderId)) {
+    await db.collection('blacklist').doc(messageSenderId).set({
+      created_at,
+      info: users[messageSenderId]
+    });
 
-      await db.collection('direct_message_queue').add({
-        sender: userId,
-        receiver: messageSenderId,
-        text: dmString.blockUser,
-        is_send: false,
-        created_at
-      });
+    await db.collection('direct_message_queue').add({
+      sender: userId,
+      receiver: messageSenderId,
+      text: dmString.blockUser,
+      is_send: false,
+      created_at
+    });
 
-      isBlockUser = true;
-    }
-
-    return Promise.resolve({ isBlockUser });
-  } catch (error) {
-    return Promise.reject(error);
+    isBlockUser = true;
   }
+
+  return { isBlockUser };
 };
 
 module.exports.subscribe = async ({ userId, directMessageEvent, users, payload: customText }) => {
@@ -51,32 +47,27 @@ module.exports.subscribe = async ({ userId, directMessageEvent, users, payload: 
   } = directMessageEvent;
 
   const { userLimit } = config;
+  const subscribersSnap = await db.collection('subscribers').get();
+  const message = {
+    sender: userId,
+    receiver: messageSenderId,
+    text: dmString.subscribe.success,
+    is_send: false,
+    created_at
+  };
 
-  try {
-    const subscribersSnap = await db.collection('subscribers').get();
-    const message = {
-      sender: userId,
-      receiver: messageSenderId,
-      text: dmString.subscribe.success,
-      is_send: false,
+  if (!subscribersSnap.empty && subscribersSnap.size >= userLimit) {
+    message.text = dmString.subscribe.maximum;
+  } else {
+    await db.collection('subscribers').doc(messageSenderId).set({
+      info: users[messageSenderId],
+      customText: (customText) ? customText : null,
       created_at
-    };
-
-    if (!subscribersSnap.empty && subscribersSnap.size >= userLimit) {
-      message.text = dmString.subscribe.maximum;
-    } else {
-      await db.collection('subscribers').doc(messageSenderId).set({
-        info: users[messageSenderId],
-        customText: (customText) ? customText : null,
-        created_at
-      });
-    }
-    await db.collection('direct_message_queue').add(message);
-
-    return Promise.resolve('done');
-  } catch (error) {
-    return Promise.reject(error);
+    });
   }
+  await db.collection('direct_message_queue').add(message);
+
+  return 'done';
 };
 
 module.exports.unsubscribe = async ({ userId, directMessageEvent }) => {
@@ -87,21 +78,16 @@ module.exports.unsubscribe = async ({ userId, directMessageEvent }) => {
     }
   } = directMessageEvent;
 
-  try {
-    await db.collection('subscribers').doc(messageSenderId).delete();
+  await db.collection('subscribers').doc(messageSenderId).delete();
+  await db.collection('direct_message_queue').add({
+    sender: userId,
+    receiver: messageSenderId,
+    text: dmString.unsubscribe.success,
+    is_send: false,
+    created_at
+  });
 
-    await db.collection('direct_message_queue').add({
-      sender: userId,
-      receiver: messageSenderId,
-      text: dmString.unsubscribe.success,
-      is_send: false,
-      created_at
-    });
-
-    return Promise.resolve('done');
-  } catch (error) {
-    return Promise.reject(error);
-  }
+  return 'done';
 };
 
 module.exports.users = async ({ userId, directMessageEvent }) => {
@@ -112,20 +98,17 @@ module.exports.users = async ({ userId, directMessageEvent }) => {
     }
   } = directMessageEvent;
 
-  try {
-    const subscribersSnap = await db.collection('subscribers').get();
+  const subscribersSnap = await db.collection('subscribers').get();
 
-    await db.collection('direct_message_queue').add({
-      sender: userId,
-      receiver: messageSenderId,
-      text: dmString.users.replace(':user_count', subscribersSnap.size),
-      is_send: false,
-      created_at
-    });
-    return Promise.resolve('done');
-  } catch (error) {
-    return Promise.reject(error);
-  }
+  await db.collection('direct_message_queue').add({
+    sender: userId,
+    receiver: messageSenderId,
+    text: dmString.users.replace(':user_count', subscribersSnap.size),
+    is_send: false,
+    created_at
+  });
+
+  return 'done';
 };
 
 module.exports.unknownCommand = async ({ userId, directMessageEvent }) => {
@@ -136,19 +119,15 @@ module.exports.unknownCommand = async ({ userId, directMessageEvent }) => {
     }
   } = directMessageEvent;
 
-  try {
+  await db.collection('direct_message_queue').add({
+    sender: userId,
+    receiver: messageSenderId,
+    text: dmString.unknownCommand,
+    is_send: false,
+    created_at
+  });
 
-    await db.collection('direct_message_queue').add({
-      sender: userId,
-      receiver: messageSenderId,
-      text: dmString.unknownCommand,
-      is_send: false,
-      created_at
-    });
-    return Promise.resolve('done');
-  } catch (error) {
-    return Promise.reject(error);
-  }
+  return 'done';
 }
 
 module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName }) => {
@@ -167,5 +146,6 @@ module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName
       created_at
     });
   }
+
   return 'done';
 }
