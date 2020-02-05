@@ -26,11 +26,12 @@ module.exports = functions.firestore.document('/mention_queue/{mentionDate}/user
       result.response = response;
     }
   } catch (error) {
-    // default error message
-    result.error = error.message;
-
+    // http status error via axios
     if (error.status) {
       result.error = error;
+    } else {
+      // default error message
+      result.error = error.message;
     }
 
     console.error(error);

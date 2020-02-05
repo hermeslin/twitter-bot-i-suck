@@ -36,16 +36,19 @@ module.exports = functions.firestore.document('/lookup_user_queue/{screenName}/d
     // update lookup_user data
     updateData.user = user;
   } catch (error) {
-    // default error message
-    text = dmString.app.systemFault;
-    updateData.error = error.message;
 
+    text = dmString.app.systemFault;
+
+    // http status error via axios
     if (error.status) {
       text = dmString.app.notMyFault;
       if (error.status === 404) {
         text = dmString.lookup.userNotExists
       }
       updateData.error = error;
+    } else {
+      // default error message
+      updateData.error = error.message;
     }
 
     console.error(error);

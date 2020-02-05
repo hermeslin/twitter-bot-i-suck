@@ -17,16 +17,15 @@ module.exports = functions.firestore.document('/direct_message_queue/{queueId}')
     updateData.is_send = true;
     updateData.response = response;
   } catch (error) {
-    // default error message
-    updateData.error = error.message;
-
     // http status error via axios
     if (error.status) {
       updateData.error = error;
+    } else {
+      // default error message
+      updateData.error = error.message;
     }
-
     console.error(error);
   }
 
-  return db.doc(`/direct_message_queue/${queueId}`).update(response);
+  return db.doc(`/direct_message_queue/${queueId}`).update(updateData);
 });
