@@ -4,6 +4,25 @@ const crypto = require('crypto');
 const twitter = require('../config/twitter');
 const security = require('../utils/security');
 
+const axiosHandler = async (options) => {
+  try {
+    const response = await axios(options);
+    const result = await response.data;
+    return result;
+  } catch (error) {
+    if (error.response && error.response.status) {
+      const httpError = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        errors: error.response.data.errors,
+      };
+      // reject http status error
+      return Promise.reject(httpError);
+    }
+    throw error;
+  }
+};
+
 const defaultHeaders = () => ({
   oauth_consumer_key: twitter.consumerApiKey,
   oauth_nonce: crypto.randomBytes(32).toString('hex'),
@@ -74,7 +93,7 @@ module.exports.sendMention = (screenName, text) => {
   return axios.post(`${url}?${querystring.encode(query)}`, null, { headers });
 };
 
-module.exports.lookup = (parameters, payload) => {
+module.exports.lookup = (parameters) => {
   const method = 'GET';
   const url = 'https://api.twitter.com/1.1/users/lookup.json';
   const query = parameters;
@@ -83,5 +102,9 @@ module.exports.lookup = (parameters, payload) => {
     'Authorization': `OAuth ${authorizationHeader(method, url, query)}`,
   }
 
-  return axios.get(`${url}?${querystring.encode(query)}`, { headers });
+  return axiosHandler({
+    method,
+    url: `${url}?${querystring.encode(query)}`,
+    headers
+  });
 };

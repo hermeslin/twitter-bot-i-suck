@@ -159,39 +159,13 @@ module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName
     }
   } = directMessageEvent;
 
-  try {
-    if (screenName) {
-      const response = await twitter.lookup({ screen_name: screenName });
-      const user = await response.data[0];
-      const {
-        name,
-        screen_name,
-        protected,
-        followers_count,
-        friends_count,
-        listed_count,
-        favourites_count,
-        statuses_count,
-      } = user;
-
-      await db.collection('direct_message_queue').add({
-        sender: userId,
-        receiver: messageSenderId,
-        text: dmString.lookup.replace(':name', name)
-          .replace(':screen_name', screen_name)
-          .replace(':protected', protected)
-          .replace(':followers_count', followers_count)
-          .replace(':friends_count', friends_count)
-          .replace(':listed_count', listed_count)
-          .replace(':favourites_count', favourites_count)
-          .replace(':statuses_count', statuses_count)
-        ,
-        is_send: false,
-        created_at
-      });
-    }
-    return Promise.resolve('done');
-  } catch (error) {
-    return Promise.reject(error);
+  if (screenName) {
+    const datetime = new Date().getTime();
+    await db.doc(`/lookup_user_queue/${screenName}/datetime/${datetime}`).set({
+      sender: userId,
+      receiver: messageSenderId,
+      created_at
+    });
   }
+  return 'done';
 }

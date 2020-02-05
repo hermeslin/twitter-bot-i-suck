@@ -3,6 +3,10 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 module.exports = {
+  app: {
+    systemFault: process.env.DM_APP_SYSTEM_FAULT,
+    notMyFault: process.env.DM_APP_NOT_MY_FAULT,
+  },
   blockUser: process.env.DM_BLOCK_USER,
   subscribe: {
     success: process.env.DM_SUBSCRIBRE_SUCCESS,
@@ -14,5 +18,8 @@ module.exports = {
   users: process.env.DM_USERS,
   unknownCommand: process.env.DM_UNKNOWN_COMMAND,
   mentionFail: process.env.DM_MENTION_FAIL,
-  lookup: process.env.DM_LOOKUP,
+  lookup: {
+    match: process.env.DM_LOOKUP,
+    userNotExists: process.env.DM_LOOKUP_USER_NOT_EXISTS,
+  }
 };
