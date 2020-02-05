@@ -118,3 +118,19 @@ module.exports.lookup = (parameters) => {
     headers
   });
 };
+
+module.exports.userTimeline = (parameters) => {
+  const method = 'GET';
+  const url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+  const query = parameters;
+
+  const headers = {
+    'Authorization': `OAuth ${authorizationHeader(method, url, query)}`,
+  }
+
+  return axiosHandler({
+    method,
+    url: `${url}?${querystring.encode(query)}`,
+    headers
+  });
+}
