@@ -20,25 +20,32 @@ module.exports = functions.firestore.document('/mention_queue/{mentionDate}/user
 
     if (subscriberSnap.exists) {
       const subscriber = subscriberSnap.data();
-      const { status, statusText, data } = await twitter.sendMention(subscriber.info.screen_name, newMention.text);
+
+      const response = await twitter.sendMention(subscriber.info.screen_name, newMention.text);
       result.is_send = true;
-      result.response = {
-        status, statusText, data
-      };
+      result.response = response;
     }
-    return db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
   } catch (error) {
-    result.error = {
-      status: error.response.status,
-      statusText: error.response.statusText,
-      headers: error.response.headers,
-      data: error.response.data,
-    };
-    db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
+    // default error message
+    result.error = error.message;
 
-    const dmText = dmString.mentionFail.replace(':mention_text', newMention.text);
-    twitter.sendDm(receiverId, dmText);
+    if (error.status) {
+      result.error = error;
+    }
 
-    return Promise.reject(error);
+    console.error(error);
   }
+
+  if (result.error) {
+    const text = dmString.mentionFail.replace(':mention_text', newMention.text);
+    await db.collection('direct_message_queue').add({
+      sender: newMention.sender,
+      receiver: receiverId,
+      text,
+      is_send: false,
+      created_at
+    });
+  }
+
+  return db.doc(`/mention_queue/${mentionDate}/users/${receiverId}`).update(result);
 });

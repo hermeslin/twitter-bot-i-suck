@@ -47,6 +47,8 @@ module.exports = functions.firestore.document('/lookup_user_queue/{screenName}/d
       }
       updateData.error = error;
     }
+
+    console.error(error);
   }
 
   // update queue data

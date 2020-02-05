@@ -60,6 +60,7 @@ module.exports.subscribe = async ({ userId, directMessageEvent, users, payload: 
     message.text = dmString.subscribe.maximum;
   } else {
     await db.collection('subscribers').doc(messageSenderId).set({
+      handler: userId,
       info: users[messageSenderId],
       customText: (customText) ? customText : null,
       created_at

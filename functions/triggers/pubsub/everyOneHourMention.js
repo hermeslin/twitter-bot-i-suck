@@ -23,7 +23,6 @@ module.exports = functions.pubsub.topic('every-one-hour-mention').onPublish(asyn
     filterResult.push(notMentionedUsers(subscriber));
   });
 
-
   const notMentionedListPromise = await Promise.all(filterResult);
   const notMentionedList = notMentionedListPromise.filter((notMentioned) => {
     return !notMentioned.exists
@@ -33,6 +32,7 @@ module.exports = functions.pubsub.topic('every-one-hour-mention').onPublish(asyn
     const randomIndex = Math.floor(Math.random() * notMentionedList.length);
     const notMentioned = notMentionedList[randomIndex];
     db.doc(`mention_queue/${today}/users/${notMentioned.subscriber.id}`).set({
+      sender: notMentioned.subscriber.data.handler,
       text: (notMentioned.subscriber.data.customText) ? notMentioned.subscriber.data.customText : config.mentionText,
       is_send: false,
       create_at: new Date().getTime(),
