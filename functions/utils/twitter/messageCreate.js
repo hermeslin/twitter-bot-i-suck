@@ -139,14 +139,45 @@ module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName
     }
   } = directMessageEvent;
 
-  if (screenName) {
-    const datetime = new Date().getTime();
-    await db.doc(`/lookup_user_queue/${screenName}/datetime/${datetime}`).set({
-      sender: userId,
-      receiver: messageSenderId,
-      created_at
-    });
+  if (!screenName) {
+    return 'done'
   }
+
+  let text = dmString.app.systemFault;
+
+  try {
+    const users = await twitter.lookup({ screen_name: screenName });
+    const user = users[0];
+    console.log(dmString);
+    console.log(user.name);
+
+    text = dmString.lookup.match.replace(':name', user.name)
+      .replace(':screen_name', user.screen_name)
+      .replace(':protected', user.protected)
+      .replace(':followers_count', user.followers_count)
+      .replace(':friends_count', user.friends_count)
+      .replace(':listed_count', user.listed_count)
+      .replace(':favourites_count', user.favourites_count)
+      .replace(':statuses_count', user.statuses_count);
+  } catch (error) {
+    // http status error via axios
+    if (error.status) {
+      text = dmString.app.notMyFault;
+      if (error.status === 404) {
+        text = dmString.lookup.userNotExists
+      }
+    }
+    console.error(error);
+  }
+
+  // insert queue data
+  await db.collection('direct_message_queue').add({
+    sender: userId,
+    receiver: messageSenderId,
+    text,
+    is_send: false,
+    created_at
+  });
 
   return 'done';
 }
