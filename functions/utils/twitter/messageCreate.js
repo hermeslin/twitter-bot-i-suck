@@ -148,8 +148,6 @@ module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName
   try {
     const users = await twitter.lookup({ screen_name: screenName });
     const user = users[0];
-    console.log(dmString);
-    console.log(user.name);
 
     text = dmString.lookup.match.replace(':name', user.name)
       .replace(':screen_name', user.screen_name)
