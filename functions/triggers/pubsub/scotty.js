@@ -6,11 +6,20 @@ const twitter = require('../../utils/twitter');
 const dmString = require('../../config/dmString');
 
 module.exports = functions.pubsub.topic('doesnt-know').onPublish(async (message) => {
-  const {
+  let [
     scout,
     scotty,
-    fiona
-  } = message.attributes;
+    fiona,
+  ] = [null, null, null];
+
+  try {
+    scout = message.json.scout;
+    scotty = message.json.scotty;
+    fiona = message.json.fiona;
+  } catch (e) {
+    console.error('PubSub message was not JSON', e);
+    return 'done';
+  }
 
   const db = admin.firestore();
   const today = moment().tz(config.timezone).format('YYYYMMDDHHmmss');
@@ -29,10 +38,11 @@ module.exports = functions.pubsub.topic('doesnt-know').onPublish(async (message)
       friends_count: user.friends_count,
       favourites_count: user.favourites_count,
       statuses_count: user.statuses_count,
+      listed_count: user.listed_count,
     }
 
+    //
     if (!user.protected) {
-
       // set latest id and status
       userSummary.text = user.status.text;
       userSummary.lastest_status_id = user.status.id;
@@ -71,26 +81,56 @@ module.exports = functions.pubsub.topic('doesnt-know').onPublish(async (message)
       await Promise.all(insertAll);
 
       //
-      if (scout && scotty && parameters.since_id && timeline.length) {
+      if (parameters.since_id && timeline.length) {
         await db.collection('direct_message_queue').add({
           sender: scout,
           receiver: scotty,
-          text: timeline[0].text,
+          text: `Fiona latested status: ${timeline[0].text}`,
           is_send: false,
-          created_at
+          created_at: new Date().getTime(),
         });
       }
     }
 
-    await fionaRef.set({
-      userSummary,
-      updated_at: new Date().getTime(),
-    });
+    // only store data when fiona info changed
+    const fionaRefGet = await fionaRef.get();
+    if (fionaRefGet.exists) {
+      const fionaData = fionaRefGet.data();
+      if (
+        fionaData.protected !== userSummary.protected ||
+        fionaData.favourites_count !== userSummary.favourites_count ||
+        fionaData.statuses_count !== userSummary.statuses_count
+      ) {
+        const text = dmString.lookup.match.replace(':name', userSummary.name)
+          .replace(':screen_name', userSummary.screen_name)
+          .replace(':protected', userSummary.protected)
+          .replace(':followers_count', userSummary.followers_count)
+          .replace(':friends_count', userSummary.friends_count)
+          .replace(':listed_count', userSummary.listed_count)
+          .replace(':favourites_count', userSummary.favourites_count)
+          .replace(':statuses_count', userSummary.statuses_count);
 
-    await fionaRef.collection('date').doc(today).set({
-      user,
-      create_at: new Date().getTime(),
-    });
+        await db.collection('direct_message_queue').add({
+          sender: scout,
+          receiver: scotty,
+          text,
+          is_send: false,
+          created_at: new Date().getTime(),
+        });
+
+        userSummary.updated_at = new Date().getTime();
+        await fionaRef.set(userSummary);
+
+        await fionaRef.collection('date').doc(today).set({
+          user,
+          create_at: new Date().getTime(),
+        });
+      }
+    } else {
+      // initial data
+      userSummary.updated_at = new Date().getTime();
+      await fionaRef.set(userSummary);
+    }
 
     return 'done';
   } catch (error) {
