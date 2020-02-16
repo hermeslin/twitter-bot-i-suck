@@ -1,3 +1,4 @@
+const weirdFonts = require('weird-fonts');
 const dmString = require('../../config/dmString');
 const config = require('../../config/app');
 const admin = require('../../utils/admin');
@@ -129,7 +130,7 @@ module.exports.unknownCommand = async ({ userId, directMessageEvent }) => {
   });
 
   return 'done';
-}
+};
 
 module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName }) => {
   const {
@@ -178,4 +179,48 @@ module.exports.lookup = async ({ userId, directMessageEvent, payload: screenName
   });
 
   return 'done';
-}
+};
+
+module.exports.fonts = async ({ userId, directMessageEvent, payload: originalText }) => {
+  const {
+    created_timestamp: created_at,
+    message_create: {
+      sender_id: messageSenderId,
+    }
+  } = directMessageEvent;
+
+  if (!originalText || originalText.length <= 0) {
+    return 'done'
+  }
+
+  const tranformText = [
+    { name: 'serif', style: 'italic' },
+    { name: 'serif', style: 'bold' },
+    { name: 'serif', style: 'bold-italic' },
+    { name: 'sansSerif', style: 'normal' },
+    { name: 'sansSerif', style: 'italic' },
+    { name: 'sansSerif', style: 'bold' },
+    { name: 'sansSerif', style: 'bold-italic' },
+    { name: 'monoSpace' },
+    { name: 'doubleStruck' },
+    { name: 'circle' },
+    { name: 'square' },
+    { name: 'script', style: 'normal' },
+    { name: 'script', style: 'bold' },
+    { name: 'fraktur', style: 'normal' },
+    { name: 'fraktur', style: 'bold' },
+  ].map((font) => {
+    return weirdFonts[font.name](originalText, { fontStyle: font.style });
+  });
+
+  // insert queue data
+  await db.collection('direct_message_queue').add({
+    sender: userId,
+    receiver: messageSenderId,
+    text: tranformText.join('\n'),
+    is_send: false,
+    created_at
+  });
+
+  return 'done';
+};

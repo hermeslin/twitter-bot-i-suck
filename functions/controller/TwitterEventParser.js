@@ -9,7 +9,7 @@ const directMessageHandler = async (userId, directMessageEvent, users) => {
     }
   } = directMessageEvent;
 
-  if (type === 'message_create' && messageData) {
+  if (type === 'message_create' && messageData && messageData.text) {
     // do not process self message
     if (userId === messageSenderId) {
       return directMessageEvent;
@@ -32,12 +32,16 @@ const directMessageHandler = async (userId, directMessageEvent, users) => {
 
     switch (command.toLowerCase()) {
       // command with paylaod
-      // exp: subscribe:mention_text or lookup:screen_name
+      // exp: subscribe:mention_text or lookup:screen_name or fonts:text
       case 'subscribe':
         await messageCreate.subscribe(data);
         break;
       case 'lookup':
         await messageCreate.lookup(data);
+        break;
+      case 'fonts':
+      case 'font':
+        await messageCreate.fonts(data);
         break;
       // command without paylaod
       case 'unsubscribe':
