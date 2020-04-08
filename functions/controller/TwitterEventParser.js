@@ -9,7 +9,7 @@ const directMessageHandler = async (userId, directMessageEvent, users) => {
     }
   } = directMessageEvent;
 
-  if (type === 'message_create' && messageData && messageData.text) {
+  if (type === 'message_create' && messageData && typeof messageData.text === 'string') {
     // do not process self message
     if (userId === messageSenderId) {
       return directMessageEvent;

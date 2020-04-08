@@ -75,13 +75,15 @@ module.exports = functions.pubsub.topic('doesnt-know').onPublish(async (message)
       );
 
       for (const status of timeline) {
-        insertAll.push(addFionaStatus(status));
+        if (status.id !== parameters.since_id) {
+          insertAll.push(addFionaStatus(status));
+        }
       }
 
       await Promise.all(insertAll);
 
       //
-      if (parameters.since_id && timeline.length) {
+      if (parameters.since_id && timeline.length && parameters.since_id !== timeline[0].id) {
         await db.collection('direct_message_queue').add({
           sender: scout,
           receiver: scotty,
