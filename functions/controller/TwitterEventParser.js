@@ -9,14 +9,26 @@ const directMessageHandler = async (userId, directMessageEvent, users) => {
     }
   } = directMessageEvent;
 
-  if (type === 'message_create' && messageData && typeof messageData.text === 'string') {
+
+  if (type === 'message_create' && messageData && messageData.text) {
     // do not process self message
     if (userId === messageSenderId) {
       return directMessageEvent;
     }
 
     // parse direct message string
-    const [, command, payload] = messageData.text.match(/^(\w+)(?::(.+))?$/);
+    const matchedContent = messageData.text.match(/^(\w+)(?::(.+))?$/);
+    if (!matchedContent) {
+      await messageCreate.unknownCommand({
+        userId,
+        directMessageEvent,
+        users,
+        payload: null,
+      });
+      return directMessageEvent;
+    }
+
+    const [, command, payload] = matchedContent
     const data = {
       userId,
       directMessageEvent,
